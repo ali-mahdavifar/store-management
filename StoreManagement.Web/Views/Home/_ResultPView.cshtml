@@ -1,0 +1,16 @@
+﻿@{
+
+    Layout = null;
+}
+
+
+@{ var items = (List<StoreManagement.Common.Models.Product>)ViewData["search_result"]; }
+
+@foreach (var elem in items)
+{
+
+    <div>
+        @Html.ActionLink(elem.Name, "Details", new { Id = elem.Id }, new { })
+    </div>
+
+}

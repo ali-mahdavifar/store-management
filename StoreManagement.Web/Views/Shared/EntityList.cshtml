@@ -1,0 +1,149 @@
+﻿@using System.Collections.Generic;
+@using StoreManagement.Framework.MetaData;
+
+@{
+    Type entityType = ViewBag.Type;
+    Type viewModelType = MetaDataService.GetEntityInfo(entityType).DefaultViewModelType;
+    string entityName = MetaDataHelper.GetDisplayName(viewModelType);
+    var properties = MetaDataService.GetTypeDisplayProperties(viewModelType);
+    long e_id = 0;
+    bool shima_flag = false;
+}
+@if (ViewBag.RowsAffected != null)
+{
+    <div class="bg-danger text-danger img-rounded" style="height:20px"><h5><strong>@string.Format("نتیجه جستجو: {0} مورد یافت شد", ViewBag.RowsAffected)</strong></h5></div>
+}
+<h2>فهرست @entityName</h2>
+
+@{ 
+    if((entityName[entityName.Length-1] == 'ا') || (entityName[entityName.Length-1] == 'و'))
+    {
+        shima_flag = true;
+    }
+}
+
+@if (shima_flag) {
+    <p>
+        @Html.ActionLink(entityName + "ی" + " جدید", "Create", entityType.Name, null, new { @class = "btn btn-success btn-sm" })
+    </p>
+} else {
+    <p>
+        @Html.ActionLink(entityName + " جدید", "Create", entityType.Name, null, new { @class = "btn btn-success btn-sm" })
+    </p>
+ }
+
+<table class="table">
+    <tr>
+        @using (Html.BeginForm("Search", entityType.Name, FormMethod.Get))
+        {
+            foreach (var propInfo in properties)
+            {
+                <th><div>@propInfo.Item2 </div>
+                     <div><input type="text" name=@propInfo.Item1 style="width : 100px ;height : 25px"  class=form-control text-box single-line /></div>
+                </th>
+                }
+            <th>
+                <div>&nbsp;</div> <input type="submit", value="جستجو" class = "btn btn-primary btn-sm" style ="width: 138px; height:25px"/>
+           </th>
+        }
+    </tr>
+    @foreach (var entity in ViewBag.List)
+    {
+        e_id = entity.Id;
+
+        <tr id="tr_@e_id">
+            @foreach (var propInfo in properties)
+            {
+                <td>
+                    @viewModelType.GetProperty(propInfo.Item1).GetValue(entity)
+                </td>
+            }
+            <td>
+
+                <div>
+                    @Html.ActionLink("جزئیات", "Details", new { Id = entity.Id }, new { @class = "btn btn-info btn-xs" })
+                    @Html.ActionLink("ویرایش", "Edit", new { Id = entity.Id }, new { @class = "btn btn-warning btn-xs" })
+                    <button onclick="delete_by_ajax(@e_id); " type="button" class="btn btn-danger btn-xs"> حذف  </button>
+                </div>
+
+            </td>
+        </tr>
+    }
+</table>
+
+
+
+
+<div id="dialog-confirm" style="display:none;" title="حذف موجودیت ">
+    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span> آیا مطمئن هستید؟ </p>
+</div>
+
+<div id="dialog-impossible" style="display:none;" title="حذف ممکن نیست ">
+    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span> احتمالا موجودیت های دیگری به این موجودیت وابسته اند. </p>
+</div>
+
+<div id="dialog-impossible-invoice" style="display:none;" title="حذف ممکن نیست ">
+    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>  حذف فاکتور ها ممکن نیست.  </p>
+</div>
+
+
+@section css{
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css">
+}
+
+
+@section scripts{
+
+    <script src="~/Scripts/jquery-ui.min.js"></script>
+
+    <script type="text/javascript">
+
+        function delete_by_ajax(target_id) {
+
+            var d_impossible_name = "#dialog-impossible";
+            
+            $("#dialog-confirm").dialog({
+                resizable: false,
+                height: "auto",
+                width: 400,
+                modal: true,
+                buttons: {
+                    " پاکش کن ": function () {
+                        $(this).dialog("close");
+                        $.ajax({
+                            type: 'post',
+                            url: '@Url.Action("Delete")',
+                            data: {
+                                id: target_id,
+                            },
+                            success: function () {
+                                $('#tr_' + target_id).fadeOut(500);
+                            },
+                            error: function(){
+                                $(d_impossible_name).dialog({
+                                    resizable: false,
+                                    height: "auto",
+                                    width: 400,
+                                    modal: true,
+                                    buttons: {
+                                        " حله ": function() {
+                                            $(this).dialog("close");
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    },
+                    " بیخیالش ": function () {
+                        $(this).dialog("close");
+                    }
+                }
+            });   
+
+        }
+
+    </script>
+
+
+    <script src="~/scripts/comet-notifications.js"></script>
+}

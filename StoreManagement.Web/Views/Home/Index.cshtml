@@ -1,0 +1,83 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+
+
+<h1>مدیریت فروشگاه</h1>
+<br />
+
+
+<h2> جستجو ی کالا </h2>
+
+<br />
+<p><b><font color="005577"> کالای مورد نظر خود را جستجو کنید :)</font></b></p>
+<br />
+
+
+<p><b><font>گروه ها :</font></b></p>
+
+<select class="form-control">
+    <option value="همه">همه</option>
+    @{var categs = (List<StoreManagement.Common.Models.Category>)ViewData["categories"]; }
+    @foreach (var elem in categs)
+    {
+        <option value="@elem.Title"> @elem.Title </option>
+    }
+</select>
+
+<br />
+<br />
+
+
+<text> جستجو برای :</text>
+<form >
+    <div>
+        <input type="text" name="prTitle" id="PrTitleID" placeholder="نام کالا" class="form-control" />
+        <button class="my_btn btn btn-default" type="button" onclick="search_for_pr()"> جستجو </button>
+    </div>
+</form>
+
+
+<hr />
+
+<div class="result_div">
+
+</div>
+
+<!-- end of search -->
+
+@section scripts{
+<script type="text/javascript">
+    function search_for_pr() {
+        //$("#PrTitleID").val("youhoo");
+        
+        $.ajax({
+            type: 'post',
+            url: '/home/searchfor',
+            data: {
+                title: $("#PrTitleID").val(),
+            },
+            success: function (result) {    // this result must be an html tag
+                $(".result_div").empty();
+                $(".result_div").append($(result));
+            }
+          
+        });
+        //*/
+    }
+
+
+    @if (!string.IsNullOrEmpty((string)ViewData["searched"])) {
+        <text>
+        $(document).ready(function() {
+            $("#PrTitleID").val("@ViewData["searched"]");
+                search_for_pr();
+        });
+        </text>
+    }
+
+</script>
+                         
+}
+
